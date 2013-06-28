@@ -1,0 +1,117 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="larry.baby.rain"
+    android:versionCode="1"
+    android:versionName="1.0" >
+
+    <uses-sdk
+        android:minSdkVersion="15"
+        android:targetSdkVersion="16" />
+
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+
+    <application
+        android:icon="@drawable/icon"
+        android:label="@string/app_name" >
+        <activity
+            android:name=".activity.LibraryActivity"
+            android:launchMode="singleTask"
+            android:theme="@style/Library"
+            android:uiOptions="splitActionBarWhenNarrow" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="PreferencesActivity"
+            android:theme="@style/BackActionBar" />
+        <activity android:name="PreferencesActivity$AudioActivity" />
+        <activity android:name="PreferencesActivity$PlaybackActivity" />
+        <activity android:name="PreferencesActivity$LibraryActivity" />
+        <activity android:name="PreferencesActivity$NotificationsActivity" />
+        <activity android:name="PreferencesActivity$ShakeActivity" />
+        <activity android:name="PreferencesActivity$MiscActivity" />
+        <activity android:name="PreferencesActivity$AboutActivity" />
+
+        <receiver
+            android:name=".widget.OneCellWidget"
+            android:label="Vanilla Music 1x1" >
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/one_cell_widget" />
+        </receiver>
+        <receiver
+            android:name=".widget.FourLongWidget"
+            android:label="Vanilla Music 4x1 A" >
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/four_long_widget" />
+        </receiver>
+        <receiver
+            android:name=".widget.FourWhiteWidget"
+            android:label="Vanilla Music 4x1 White" >
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/four_white_widget" />
+        </receiver>
+        <receiver
+            android:name=".widget.WidgetE"
+            android:label="Vanilla Music 4x1 B" >
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_e" />
+        </receiver>
+        <receiver
+            android:name=".widget.FourSquareWidget"
+            android:label="Vanilla Music 2x2 A" >
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/four_square_widget" />
+        </receiver>
+        <receiver
+            android:name=".widget.WidgetD"
+            android:label="Vanilla Music 2x2 B" >
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_d" />
+        </receiver>
+
+        <service android:name=".service.PlaybackService" >
+            <intent-filter>
+                <action android:name="larry.baby.rain.PLAY" />
+                <action android:name="larry.baby.rain.PAUSE" />
+                <action android:name="larry.baby.rain.TOGGLE_PLAYBACK" />
+                <action android:name="larry.baby.rain.NEXT_SONG" />
+                <action android:name="larry.baby.rain.PREVIOUS_SONG" />
+            </intent-filter>
+        </service>
+    </application>
+
+</manifest>

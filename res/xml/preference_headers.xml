@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<preference-headers xmlns:android="http://schemas.android.com/apk/res/android">
+	<header
+		android:fragment="larry.baby.rain.activity$AudioFragment"
+		android:title="@string/audio" />
+	<header
+		android:fragment="larry.baby.rain.activity$PlaybackFragment"
+		android:title="@string/playback_screen" />
+	<header
+		android:fragment="larry.baby.rain.activity$LibraryFragment"
+		android:title="@string/library_screen" />
+	<header
+		android:fragment="larry.baby.rain.activity$NotificationsFragment"
+		android:title="@string/notifications" />
+	<header
+		android:fragment="larry.baby.rain.activity$ShakeFragment"
+		android:title="@string/accelerometer_shake" />
+	<header
+		android:fragment="larry.baby.rain.activity$MiscFragment"
+		android:title="@string/misc_features" />
+	<header
+		android:fragment="larry.baby.rain.activity$AboutFragment"
+		android:title="@string/about" />
+</preference-headers>
