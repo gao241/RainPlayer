@@ -26,10 +26,10 @@ import java.io.File;
 
 import junit.framework.Assert;
 import larry.baby.rain.R;
-import larry.baby.rain.common.FileSystemAdapter;
-import larry.baby.rain.common.LibraryAdapter;
-import larry.baby.rain.common.LibraryPagerAdapter;
-import larry.baby.rain.common.MediaAdapter;
+import larry.baby.rain.adapter.FileSystemAdapter;
+import larry.baby.rain.adapter.LibraryAdapter;
+import larry.baby.rain.adapter.LibraryPagerAdapter;
+import larry.baby.rain.adapter.MediaAdapter;
 import larry.baby.rain.common.util.CompatHoneycomb;
 import larry.baby.rain.common.util.MediaUtils;
 import larry.baby.rain.common.util.Playlist;
@@ -43,6 +43,7 @@ import larry.baby.rain.entity.SongTimeline;
 import larry.baby.rain.service.PlaybackService;
 import android.app.AlertDialog;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -173,6 +174,17 @@ public class LibraryActivity extends PlaybackActivity implements TextWatcher, Di
 	 * ApplicationInfo with targetSdkVersion set to Gingerbread.
 	 */
 	private ApplicationInfo mFakeInfo;
+
+	/**
+	 * Launch Home activity helper
+	 *
+	 * @param c context where launch home from (used by SplashscreenActivity)
+	 */
+	public static void launch(Context c){
+		Intent intent = new Intent(c, LibraryActivity.class);
+		intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP );
+		c.startActivity(intent);
+	}
 
 	@Override
 	public void onCreate(Bundle state) {

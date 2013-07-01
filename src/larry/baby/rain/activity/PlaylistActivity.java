@@ -23,7 +23,7 @@
 package larry.baby.rain.activity;
 
 import larry.baby.rain.R;
-import larry.baby.rain.common.PlaylistAdapter;
+import larry.baby.rain.adapter.PlaylistAdapter;
 import larry.baby.rain.common.util.MediaUtils;
 import larry.baby.rain.common.util.Playlist;
 import larry.baby.rain.common.view.DragListView;

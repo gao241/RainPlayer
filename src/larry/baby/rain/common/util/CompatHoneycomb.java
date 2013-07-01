@@ -23,7 +23,7 @@
 package larry.baby.rain.common.util;
 
 import larry.baby.rain.activity.LibraryActivity;
-import larry.baby.rain.common.LibraryPagerAdapter;
+import larry.baby.rain.adapter.LibraryPagerAdapter;
 import android.annotation.TargetApi;
 import android.app.ActionBar;
 import android.app.ActionBar.Tab;
