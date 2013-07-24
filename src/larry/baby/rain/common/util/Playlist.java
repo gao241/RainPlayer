@@ -22,18 +22,81 @@
 
 package larry.baby.rain.common.util;
 
+import java.io.File;
+import java.io.IOException;
+
 import larry.baby.rain.entity.QueryTask;
+import larry.baby.rain.entity.Song;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
+import android.util.Log;
 
 /**
  * Provides various playlist-related utility functions.
  */
 public class Playlist {
+	/**
+	 * Search folder for finding playlists. If folder has files, create a playlist.
+	 * @param resolver A ContentResolver to use.
+	 * @param folderPath folder path to search.
+	 */
+	public static void searchFolderForPlaylists(ContentResolver resolver, String folderPath){
+		File dir = new File(folderPath);
+		searchFolderForPlaylists(resolver, dir);
+	}
+
+	/**
+	 * Search folder for finding playlists. If folder has files, create a playlist.
+	 * @param resolver A ContentResolver to use.
+	 * @param folder folder instance to search.
+	 */
+	public static void searchFolderForPlaylists(ContentResolver resolver, File folder){
+		String fileName = folder.getName();
+
+		if(folder.exists() && folder.isDirectory()){
+			File[] files = folder.listFiles();
+
+			if(files.length == 0){
+				return;
+			}
+
+			boolean hasFiles = false;
+
+			// find if folder has files.
+			for (int i = 0; i < files.length; i++) {
+				File f = files[i];
+				if(f.isFile()){
+					hasFiles = true;
+					break;
+				}
+			}
+
+			// if folder has file, create playlist and add songs of folder.
+			if(hasFiles){
+				long playlistId = createPlaylist(resolver, fileName);
+				String path;
+				try {
+					path = folder.getCanonicalPath();
+				} catch (IOException e) {
+					path = folder.getAbsolutePath();
+					Log.e("RainPlayer", "Failed to canonicalize path", e);
+				}
+
+				QueryTask  query = MediaUtils.buildFileQuery(path, Song.FILLED_PROJECTION);
+				addToPlaylist(resolver, playlistId, query);
+			} else {
+				for (int i = 0; i < files.length; i++) {
+					File f = files[i];
+					searchFolderForPlaylists(resolver, f);
+				}
+			}
+		}
+	}
+
 	/**
 	 * Queries all the playlists known to the MediaStore.
 	 *

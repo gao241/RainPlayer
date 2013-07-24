@@ -49,11 +49,7 @@ import android.widget.TextView;
  * A list adapter that provides a view of the filesystem. The active directory
  * is set through a {@link Limiter} and rows are displayed using MediaViews.
  */
-public class FileSystemAdapter
-	extends BaseAdapter
-	implements LibraryAdapter
-	         , View.OnClickListener
-{
+public class FileSystemAdapter extends BaseAdapter implements LibraryAdapter, View.OnClickListener {
 	private static final Pattern SPACE_SPLIT = Pattern.compile("\\s+");
 	private static final Pattern FILE_SEPARATOR = Pattern.compile(File.separator);
 
@@ -86,8 +82,7 @@ public class FileSystemAdapter
 	 */
 	private final FilenameFilter mFileFilter = new FilenameFilter() {
 		@Override
-		public boolean accept(File dir, String filename)
-		{
+		public boolean accept(File dir, String filename) {
 			if (filename.charAt(0) == '.')
 				return false;
 			if (mFilter != null) {
@@ -105,8 +100,7 @@ public class FileSystemAdapter
 	 */
 	private final Comparator<File> mFileComparator = new Comparator<File>() {
 		@Override
-		public int compare(File a, File b)
-		{
+		public int compare(File a, File b) {
 			boolean aIsFolder = a.isDirectory();
 			boolean bIsFolder = b.isDirectory();
 			if (bIsFolder == aIsFolder) {
@@ -125,28 +119,28 @@ public class FileSystemAdapter
 	/**
 	 * Create a FileSystemAdapter.
 	 *
-	 * @param activity The LibraryActivity that will contain this adapter.
-	 * Called on to requery this adapter when the contents of the directory
-	 * change.
-	 * @param limiter An initial limiter to set. If none is given, will be set
-	 * to the external storage directory.
+	 * @param activity
+	 *            The LibraryActivity that will contain this adapter. Called on
+	 *            to requery this adapter when the contents of the directory
+	 *            change.
+	 * @param limiter
+	 *            An initial limiter to set. If none is given, will be set to
+	 *            the external storage directory.
 	 */
-	public FileSystemAdapter(LibraryActivity activity, Limiter limiter)
-	{
+	public FileSystemAdapter(LibraryActivity activity, Limiter limiter) {
 		mActivity = activity;
 		mLimiter = limiter;
 		mFolderIcon = activity.getResources().getDrawable(R.drawable.folder);
-		mInflater = (LayoutInflater)activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		mInflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		if (limiter == null) {
-			limiter = buildLimiter( activity.getFilesystemBrowseStart() );
+			limiter = buildLimiter(activity.getFilesystemBrowseStart());
 		}
 		setLimiter(limiter);
 	}
 
 	@Override
-	public Object query()
-	{
-		File file = mLimiter == null ? new File("/") : (File)mLimiter.data;
+	public Object query() {
+		File file = mLimiter == null ? new File("/") : (File) mLimiter.data;
 
 		if (mFileObserver == null) {
 			mFileObserver = new Observer(file.getPath());
@@ -159,36 +153,31 @@ public class FileSystemAdapter
 	}
 
 	@Override
-	public void commitQuery(Object data)
-	{
-		mFiles = (File[])data;
+	public void commitQuery(Object data) {
+		mFiles = (File[]) data;
 		notifyDataSetInvalidated();
 	}
 
 	@Override
-	public void clear()
-	{
+	public void clear() {
 		mFiles = null;
 		notifyDataSetInvalidated();
 	}
 
 	@Override
-	public int getCount()
-	{
+	public int getCount() {
 		if (mFiles == null)
 			return 0;
 		return mFiles.length;
 	}
 
 	@Override
-	public Object getItem(int pos)
-	{
+	public Object getItem(int pos) {
 		return mFiles[pos];
 	}
 
 	@Override
-	public long getItemId(int pos)
-	{
+	public long getItemId(int pos) {
 		return pos;
 	}
 
@@ -200,23 +189,22 @@ public class FileSystemAdapter
 	}
 
 	@Override
-	public View getView(int pos, View convertView, ViewGroup parent)
-	{
+	public View getView(int pos, View convertView, ViewGroup parent) {
 		View view;
 		ViewHolder holder;
 
 		if (convertView == null) {
 			view = mInflater.inflate(R.layout.library_row_expandable, null);
 			holder = new ViewHolder();
-			holder.text = (TextView)view.findViewById(R.id.text);
+			holder.text = (TextView) view.findViewById(R.id.text);
 			holder.divider = view.findViewById(R.id.divider);
-			holder.arrow = (ImageView)view.findViewById(R.id.arrow);
+			holder.arrow = (ImageView) view.findViewById(R.id.arrow);
 			holder.text.setOnClickListener(this);
 			holder.arrow.setOnClickListener(this);
 			view.setTag(holder);
 		} else {
 			view = convertView;
-			holder = (ViewHolder)view.getTag();
+			holder = (ViewHolder) view.getTag();
 		}
 
 		File file = mFiles[pos];
@@ -230,8 +218,7 @@ public class FileSystemAdapter
 	}
 
 	@Override
-	public void setFilter(String filter)
-	{
+	public void setFilter(String filter) {
 		if (filter == null)
 			mFilter = null;
 		else
@@ -239,8 +226,7 @@ public class FileSystemAdapter
 	}
 
 	@Override
-	public void setLimiter(Limiter limiter)
-	{
+	public void setLimiter(Limiter limiter) {
 		if (mFileObserver != null)
 			mFileObserver.stopWatching();
 		mFileObserver = null;
@@ -248,33 +234,30 @@ public class FileSystemAdapter
 	}
 
 	@Override
-	public Limiter getLimiter()
-	{
+	public Limiter getLimiter() {
 		return mLimiter;
 	}
 
 	/**
-	 * Builds a limiter from the given folder. Only files contained in the
-	 * given folder will be shown if the limiter is set on this adapter.
+	 * Builds a limiter from the given folder. Only files contained in the given
+	 * folder will be shown if the limiter is set on this adapter.
 	 *
-	 * @param file A File pointing to a folder.
+	 * @param file
+	 *            A File pointing to a folder.
 	 * @return A limiter describing the given folder.
 	 */
-	public static Limiter buildLimiter(File file)
-	{
+	public static Limiter buildLimiter(File file) {
 		String[] fields = FILE_SEPARATOR.split(file.getPath().substring(1));
 		return new Limiter(MediaUtils.TYPE_FILE, fields, file);
 	}
 
 	@Override
-	public Limiter buildLimiter(long id)
-	{
-		return buildLimiter(mFiles[(int)id]);
+	public Limiter buildLimiter(long id) {
+		return buildLimiter(mFiles[(int) id]);
 	}
 
 	@Override
-	public int getMediaType()
-	{
+	public int getMediaType() {
 		return MediaUtils.TYPE_FILE;
 	}
 
@@ -282,28 +265,25 @@ public class FileSystemAdapter
 	 * FileObserver that reloads the files in this adapter.
 	 */
 	private class Observer extends FileObserver {
-		public Observer(String path)
-		{
+		public Observer(String path) {
 			super(path, FileObserver.CREATE | FileObserver.DELETE | FileObserver.MOVED_TO | FileObserver.MOVED_FROM);
 			startWatching();
 		}
 
 		@Override
-		public void onEvent(int event, String path)
-		{
+		public void onEvent(int event, String path) {
 			mActivity.mPagerAdapter.postRequestRequery(FileSystemAdapter.this);
 		}
 	}
 
 	@Override
-	public Intent createData(View view)
-	{
-		ViewHolder holder = (ViewHolder)view.getTag();
+	public Intent createData(View view) {
+		ViewHolder holder = (ViewHolder) view.getTag();
 		File file = mFiles[holder.id];
 
 		Intent intent = new Intent();
 		intent.putExtra(LibraryAdapter.DATA_TYPE, MediaUtils.TYPE_FILE);
-		intent.putExtra(LibraryAdapter.DATA_ID, (long)holder.id);
+		intent.putExtra(LibraryAdapter.DATA_ID, (long) holder.id);
 		intent.putExtra(LibraryAdapter.DATA_TITLE, holder.text.getText().toString());
 		intent.putExtra(LibraryAdapter.DATA_EXPANDABLE, file.isDirectory());
 
@@ -319,9 +299,8 @@ public class FileSystemAdapter
 	}
 
 	@Override
-	public void onClick(View view)
-	{
-		Intent intent = createData((View)view.getParent());
+	public void onClick(View view) {
+		Intent intent = createData((View) view.getParent());
 		if (view.getId() == R.id.arrow) {
 			mActivity.onItemExpanded(intent);
 		} else {

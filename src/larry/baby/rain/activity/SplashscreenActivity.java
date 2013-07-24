@@ -1,13 +1,18 @@
 package larry.baby.rain.activity;
 
 import larry.baby.rain.R;
+import larry.baby.rain.common.util.MediaUtils;
+import larry.baby.rain.common.util.Playlist;
 import larry.baby.rain.constant.PrefKeys;
+import larry.baby.rain.service.PlaybackService;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.provider.MediaStore.Audio.Playlists;
 import android.view.Window;
 import android.view.animation.Animation;
 import android.view.animation.Animation.AnimationListener;
@@ -71,13 +76,12 @@ public class SplashscreenActivity extends Activity {
 		// selected folder
 		if (resultCode == RESULT_OK) {
 			String newDir = data.getStringExtra(FileBrowserActivity.returnDirectoryParameter);
-//			Toast.makeText(this, "Received DIRECTORY path from file browser:\n" + newDir, Toast.LENGTH_LONG).show();
 
 			selectedFolder = newDir;
 		}
 
 		// write selected folder into SharedPreferences.
-		Editor editor = PreferenceManager.getDefaultSharedPreferences(this).edit();
+		Editor editor = PlaybackService.getSettings(this).edit();
 		editor.putString(PrefKeys.SDCARD_SEARCH_DIRECTORY, selectedFolder);
 		editor.commit();
 
@@ -98,7 +102,9 @@ public class SplashscreenActivity extends Activity {
 	 * next time, just launch {@link LibraryActivity}.
 	 */
 	final void showDirectoryBrowserActivity() {
-		String sdcardSearchDir = PreferenceManager.getDefaultSharedPreferences(this).getString(PrefKeys.SDCARD_SEARCH_DIRECTORY, null);
+		SharedPreferences settings = PlaybackService.getSettings(this);
+		String sdcardSearchDir = settings.getString(PrefKeys.SDCARD_SEARCH_DIRECTORY, null);
+//		String sdcardSearchDir = PreferenceManager.getDefaultSharedPreferences(this).getString(PrefKeys.SDCARD_SEARCH_DIRECTORY, null);
 		if (sdcardSearchDir == null) {
 			Intent fileExploreIntent = new Intent(FileBrowserActivity.INTENT_ACTION_SELECT_DIR, null, this, FileBrowserActivity.class);
 			startActivityForResult(fileExploreIntent, REQUEST_CODE_PICK_DIR);

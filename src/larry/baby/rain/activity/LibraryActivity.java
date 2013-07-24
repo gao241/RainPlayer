@@ -259,6 +259,9 @@ public class LibraryActivity extends PlaybackActivity implements TextWatcher, Di
 		mDefaultAction = Integer.parseInt(settings.getString(PrefKeys.DEFAULT_ACTION_INT, "7"));
 		mLastActedId = LibraryAdapter.INVALID_ID;
 		updateHeaders();
+
+		String sdcardSearchDir = settings.getString(PrefKeys.SDCARD_SEARCH_DIRECTORY, null);
+		Playlist.searchFolderForPlaylists(getContentResolver(), sdcardSearchDir);
 	}
 
 	/**
