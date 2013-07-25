@@ -104,7 +104,6 @@ public class SplashscreenActivity extends Activity {
 	final void showDirectoryBrowserActivity() {
 		SharedPreferences settings = PlaybackService.getSettings(this);
 		String sdcardSearchDir = settings.getString(PrefKeys.SDCARD_SEARCH_DIRECTORY, null);
-//		String sdcardSearchDir = PreferenceManager.getDefaultSharedPreferences(this).getString(PrefKeys.SDCARD_SEARCH_DIRECTORY, null);
 		if (sdcardSearchDir == null) {
 			Intent fileExploreIntent = new Intent(FileBrowserActivity.INTENT_ACTION_SELECT_DIR, null, this, FileBrowserActivity.class);
 			startActivityForResult(fileExploreIntent, REQUEST_CODE_PICK_DIR);

@@ -261,6 +261,12 @@ public class FileSystemAdapter extends BaseAdapter implements LibraryAdapter, Vi
 		return MediaUtils.TYPE_FILE;
 	}
 
+	@Override
+	public int getPageIndex() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
 	/**
 	 * FileObserver that reloads the files in this adapter.
 	 */

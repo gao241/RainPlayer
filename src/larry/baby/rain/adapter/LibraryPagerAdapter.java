@@ -1,25 +1,3 @@
-/*
- * Copyright (C) 2012 Christopher Eby <kreed@kreed.org>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
-
 package larry.baby.rain.adapter;
 
 import java.util.Arrays;
@@ -28,12 +6,14 @@ import larry.baby.rain.R;
 import larry.baby.rain.activity.LibraryActivity;
 import larry.baby.rain.common.util.CompatHoneycomb;
 import larry.baby.rain.common.util.MediaUtils;
+import larry.baby.rain.common.util.Playlist;
 import larry.baby.rain.constant.PrefKeys;
 import larry.baby.rain.entity.Limiter;
 import larry.baby.rain.service.PlaybackService;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.ContentObserver;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -59,7 +39,7 @@ public class LibraryPagerAdapter extends PagerAdapter implements Handler.Callbac
 	 * The number of unique list types. The number of visible lists may be
 	 * smaller.
 	 */
-	public static final int MAX_ADAPTER_COUNT = 6;
+//	public static final int MAX_ADAPTER_COUNT = 6;
 	/**
 	 * The human-readable title for each list. The positions correspond to the
 	 * MediaUtils ids, so e.g. TITLES[MediaUtils.TYPE_SONG] = R.string.songs
@@ -68,7 +48,8 @@ public class LibraryPagerAdapter extends PagerAdapter implements Handler.Callbac
 	/**
 	 * Default tab order.
 	 */
-	public static final int[] DEFAULT_ORDER = { MediaUtils.TYPE_ARTIST, MediaUtils.TYPE_ALBUM, MediaUtils.TYPE_SONG, MediaUtils.TYPE_PLAYLIST, MediaUtils.TYPE_GENRE, MediaUtils.TYPE_FILE };
+//	public static final int[] DEFAULT_ORDER = { MediaUtils.TYPE_ARTIST, MediaUtils.TYPE_ALBUM, MediaUtils.TYPE_SONG, MediaUtils.TYPE_PLAYLIST, MediaUtils.TYPE_GENRE, MediaUtils.TYPE_FILE };
+	private Cursor playListCursor;
 	/**
 	 * The user-chosen tab order.
 	 */
@@ -81,15 +62,15 @@ public class LibraryPagerAdapter extends PagerAdapter implements Handler.Callbac
 	 * The ListView for each adapter. Each index corresponds to that list's
 	 * MediaUtils id.
 	 */
-	private final ListView[] mLists = new ListView[MAX_ADAPTER_COUNT];
+	private final ListView[] mLists;
 	/**
 	 * The adapters. Each index corresponds to that adapter's MediaUtils id.
 	 */
-	public LibraryAdapter[] mAdapters = new LibraryAdapter[MAX_ADAPTER_COUNT];
+	public LibraryAdapter[] mAdapters;
 	/**
 	 * Whether the adapter corresponding to each index has stale data.
 	 */
-	private final boolean[] mRequeryNeeded = new boolean[MAX_ADAPTER_COUNT];
+	private final boolean[] mRequeryNeeded;
 	/**
 	 * The artist adapter instance, also stored at
 	 * mAdapters[MediaUtils.TYPE_ARTIST].
@@ -210,6 +191,12 @@ public class LibraryPagerAdapter extends PagerAdapter implements Handler.Callbac
 		mWorkerHandler = new Handler(workerLooper, this);
 		mCurrentPage = -1;
 		activity.getContentResolver().registerContentObserver(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI, true, mPlaylistObserver);
+
+		playListCursor = Playlist.queryPlaylists(mActivity.getContentResolver());
+		mTabCount = playListCursor.getCount();
+		mLists = new ListView[mTabCount];
+		mRequeryNeeded = new boolean[mTabCount];
+		mAdapters = new LibraryAdapter[mTabCount];
 	}
 
 	/**
@@ -217,88 +204,91 @@ public class LibraryPagerAdapter extends PagerAdapter implements Handler.Callbac
 	 *
 	 * @return True if order has changed.
 	 */
-	public boolean loadTabOrder() {
-		String in = PlaybackService.getSettings(mActivity).getString(PrefKeys.TAB_ORDER, null);
-		int[] order;
-		int count;
-		if (in == null || in.length() != MAX_ADAPTER_COUNT) {
-			order = DEFAULT_ORDER;
-			count = MAX_ADAPTER_COUNT;
-		} else {
-			char[] chars = in.toCharArray();
-			order = new int[MAX_ADAPTER_COUNT];
-			count = 0;
-			for (int i = 0; i != MAX_ADAPTER_COUNT; ++i) {
-				char v = chars[i];
-				if (v >= 128) {
-					v -= 128;
-					if (v >= MediaUtils.TYPE_COUNT) {
-						// invalid media type; use default order
-						order = DEFAULT_ORDER;
-						count = MAX_ADAPTER_COUNT;
-						break;
-					}
-					order[count++] = v;
-				}
-			}
-		}
-
-		if (count != mTabCount || !Arrays.equals(order, mTabOrder)) {
-			mTabOrder = order;
-			mTabCount = count;
-			notifyDataSetChanged();
-			computeExpansions();
-			return true;
-		}
-
-		return false;
-	}
+//	public boolean loadTabOrder() {
+//		if(playListCursor == null){
+//			return false;
+//		}
+//		String in = PlaybackService.getSettings(mActivity).getString(PrefKeys.TAB_ORDER, null);
+//		int playListCount = playListCursor.getCount();
+//		int[] order;
+//		int count;
+//		if (in == null || in.length() != playListCount) {
+//			order = DEFAULT_ORDER;
+//			count = playListCount;
+//		} else {
+//			char[] chars = in.toCharArray();
+//			order = new int[playListCount];
+//			count = 0;
+//			for (int i = 0; i != playListCount; ++i) {
+//				char v = chars[i];
+//				if (v >= 128) {
+//					v -= 128;
+//					if (v >= playListCount) {
+//						// invalid media type; use default order
+//						order = DEFAULT_ORDER;
+//						count = playListCount;
+//						break;
+//					}
+//					order[count++] = v;
+//				}
+//			}
+//		}
+//
+//		if (count != mTabCount || !Arrays.equals(order, mTabOrder)) {
+//			mTabOrder = order;
+//			mTabCount = count;
+//			notifyDataSetChanged();
+//			computeExpansions();
+//			return true;
+//		}
+//
+//		return false;
+//	}
 
 	/**
 	 * Determines whether adapters should be expandable from the visibility of
 	 * the adapters each expands to. Also updates
 	 * mSongsPosition/mAlbumsPositions.
 	 */
-	public void computeExpansions() {
-		int[] order = mTabOrder;
-		int songsPosition = -1;
-		int albumsPosition = -1;
-		int artistsPosition = -1;
-		int genresPosition = -1;
-		for (int i = mTabCount; --i != -1;) {
-			switch (order[i]) {
-			case MediaUtils.TYPE_ALBUM:
-				albumsPosition = i;
-				break;
-			case MediaUtils.TYPE_SONG:
-				songsPosition = i;
-				break;
-			case MediaUtils.TYPE_ARTIST:
-				artistsPosition = i;
-				break;
-			case MediaUtils.TYPE_GENRE:
-				genresPosition = i;
-				break;
-			}
-		}
-
-		if (mArtistAdapter != null)
-			mArtistAdapter.setExpandable(songsPosition != -1 || albumsPosition != -1);
-		if (mAlbumAdapter != null)
-			mAlbumAdapter.setExpandable(songsPosition != -1);
-		if (mGenreAdapter != null)
-			mGenreAdapter.setExpandable(songsPosition != -1);
-
-		mSongsPosition = songsPosition;
-		mAlbumsPosition = albumsPosition;
-		mArtistsPosition = artistsPosition;
-		mGenresPosition = genresPosition;
-	}
+//	public void computeExpansions() {
+//		int[] order = mTabOrder;
+//		int songsPosition = -1;
+//		int albumsPosition = -1;
+//		int artistsPosition = -1;
+//		int genresPosition = -1;
+//		for (int i = mTabCount; --i != -1;) {
+//			switch (order[i]) {
+//			case MediaUtils.TYPE_ALBUM:
+//				albumsPosition = i;
+//				break;
+//			case MediaUtils.TYPE_SONG:
+//				songsPosition = i;
+//				break;
+//			case MediaUtils.TYPE_ARTIST:
+//				artistsPosition = i;
+//				break;
+//			case MediaUtils.TYPE_GENRE:
+//				genresPosition = i;
+//				break;
+//			}
+//		}
+//
+//		if (mArtistAdapter != null)
+//			mArtistAdapter.setExpandable(songsPosition != -1 || albumsPosition != -1);
+//		if (mAlbumAdapter != null)
+//			mAlbumAdapter.setExpandable(songsPosition != -1);
+//		if (mGenreAdapter != null)
+//			mGenreAdapter.setExpandable(songsPosition != -1);
+//
+//		mSongsPosition = songsPosition;
+//		mAlbumsPosition = albumsPosition;
+//		mArtistsPosition = artistsPosition;
+//		mGenresPosition = genresPosition;
+//	}
 
 	@Override
 	public Object instantiateItem(ViewGroup container, int position) {
-		int type = mTabOrder[position];
-		ListView view = mLists[type];
+		ListView view = mLists[position];
 
 		if (view == null) {
 			LibraryActivity activity = mActivity;
@@ -306,70 +296,44 @@ public class LibraryPagerAdapter extends PagerAdapter implements Handler.Callbac
 			LibraryAdapter adapter;
 			TextView header = null;
 
-			switch (type) {
-			case MediaUtils.TYPE_ARTIST:
-				adapter = mArtistAdapter = new MediaAdapter(activity, MediaUtils.TYPE_ARTIST, null);
-				mArtistAdapter.setExpandable(mSongsPosition != -1 || mAlbumsPosition != -1);
-				mArtistHeader = header = (TextView) inflater.inflate(R.layout.library_row, null);
-				break;
-			case MediaUtils.TYPE_ALBUM:
-				adapter = mAlbumAdapter = new MediaAdapter(activity, MediaUtils.TYPE_ALBUM, mPendingAlbumLimiter);
-				mAlbumAdapter.setExpandable(mSongsPosition != -1);
-				mPendingAlbumLimiter = null;
-				mAlbumHeader = header = (TextView) inflater.inflate(R.layout.library_row, null);
-				break;
-			case MediaUtils.TYPE_SONG:
-				adapter = mSongAdapter = new MediaAdapter(activity, MediaUtils.TYPE_SONG, mPendingSongLimiter);
-				mPendingSongLimiter = null;
-				mSongHeader = header = (TextView) inflater.inflate(R.layout.library_row, null);
-				break;
-			case MediaUtils.TYPE_PLAYLIST:
-				adapter = mPlaylistAdapter = new MediaAdapter(activity, MediaUtils.TYPE_PLAYLIST, null);
-				break;
-			case MediaUtils.TYPE_GENRE:
-				adapter = mGenreAdapter = new MediaAdapter(activity, MediaUtils.TYPE_GENRE, null);
-				mGenreAdapter.setExpandable(mSongsPosition != -1);
-				break;
-			case MediaUtils.TYPE_FILE:
-				adapter = mFilesAdapter = new FileSystemAdapter(activity, mPendingFileLimiter);
-				mPendingFileLimiter = null;
-				break;
-			default:
-				throw new IllegalArgumentException("Invalid media type: " + type);
-			}
+			Cursor cursor = playListCursor;
+			cursor.moveToPosition(position);
+			long id = cursor.getLong(0);
+			String name = cursor.getString(1);
+
+			mPendingSongLimiter = null;
+			mSongHeader = header = (TextView) inflater.inflate(R.layout.library_row, null);
+			adapter = mPlaylistAdapter = new MediaAdapter(activity, position, id, null);
 
 			view = (ListView) inflater.inflate(R.layout.listview, null);
 			view.setOnCreateContextMenuListener(this);
 			view.setOnItemClickListener(this);
-			view.setTag(type);
+			view.setTag(position);
 			if (header != null) {
-				header.setText(mHeaderText);
-				header.setTag(type);
+				header.setText(name);
+				header.setTag(id);
 				view.addHeaderView(header);
 			}
 			view.setAdapter(adapter);
-			if (type != MediaUtils.TYPE_FILE)
-				loadSortOrder((MediaAdapter) adapter);
+
 			enableFastScroll(view);
 			adapter.setFilter(mFilter);
 
-			mAdapters[type] = adapter;
-			mLists[type] = view;
-			mRequeryNeeded[type] = true;
+			mAdapters[position] = adapter;
+			mLists[position] = view;
+			mRequeryNeeded[position] = true;
 		}
 
-		requeryIfNeeded(type);
+		requeryIfNeeded(position);
 		container.addView(view);
 		return view;
 	}
 
 	@Override
 	public int getItemPosition(Object item) {
-		int type = (Integer) ((ListView) item).getTag();
-		int[] order = mTabOrder;
-		for (int i = mTabCount; --i != -1;) {
-			if (order[i] == type)
-				return i;
+		int position = (Integer) ((ListView) item).getTag();
+		if(position >= 0){
+			return position;
 		}
 		return POSITION_NONE;
 	}
@@ -396,10 +360,10 @@ public class LibraryPagerAdapter extends PagerAdapter implements Handler.Callbac
 
 	@Override
 	public void setPrimaryItem(ViewGroup container, int position, Object object) {
-		int type = mTabOrder[position];
-		LibraryAdapter adapter = mAdapters[type];
+//		int type = mTabOrder[position];
+		LibraryAdapter adapter = mAdapters[position];
 		if (position != mCurrentPage || adapter != mCurrentAdapter) {
-			requeryIfNeeded(type);
+			requeryIfNeeded(position);
 			mCurrentAdapter = adapter;
 			mCurrentPage = position;
 			mActivity.onPageChanged(position, adapter);
@@ -425,9 +389,9 @@ public class LibraryPagerAdapter extends PagerAdapter implements Handler.Callbac
 		if (mFilesAdapter != null)
 			out.putSerializable("limiter_files", mFilesAdapter.getLimiter());
 
-		int[] savedPositions = new int[MAX_ADAPTER_COUNT];
+		int[] savedPositions = new int[mTabCount];
 		ListView[] lists = mLists;
-		for (int i = MAX_ADAPTER_COUNT; --i != -1;) {
+		for (int i = mTabCount; --i != -1;) {
 			if (lists[i] != null) {
 				savedPositions[i] = lists[i].getFirstVisiblePosition();
 			}
@@ -597,7 +561,7 @@ public class LibraryPagerAdapter extends PagerAdapter implements Handler.Callbac
 		switch (message.what) {
 		case MSG_RUN_QUERY: {
 			LibraryAdapter adapter = (LibraryAdapter) message.obj;
-			int index = adapter.getMediaType();
+			int index = adapter.getPageIndex();
 			Handler handler = mUiHandler;
 			handler.sendMessage(handler.obtainMessage(MSG_COMMIT_QUERY, index, 0, adapter.query()));
 			break;
@@ -669,7 +633,7 @@ public class LibraryPagerAdapter extends PagerAdapter implements Handler.Callbac
 	 *            The adapter to run the query for.
 	 */
 	private void postRunQuery(LibraryAdapter adapter) {
-		mRequeryNeeded[adapter.getMediaType()] = false;
+		mRequeryNeeded[adapter.getPageIndex()] = false;
 		Handler handler = mWorkerHandler;
 		handler.removeMessages(MSG_RUN_QUERY, adapter);
 		handler.sendMessage(handler.obtainMessage(MSG_RUN_QUERY, adapter));

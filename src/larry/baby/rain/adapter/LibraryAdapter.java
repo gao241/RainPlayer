@@ -39,6 +39,11 @@ public interface LibraryAdapter extends ListAdapter {
 	public int getMediaType();
 
 	/**
+	 * Return the view page index.
+	 */
+	public int getPageIndex();
+
+	/**
 	 * Set the limiter for the adapter.
 	 *
 	 * A limiter is intended to restrict displayed media to only those that are

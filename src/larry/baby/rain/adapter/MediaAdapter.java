@@ -1,25 +1,3 @@
-/*
- * Copyright (C) 2010, 2011 Christopher Eby <kreed@kreed.org>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
-
 package larry.baby.rain.adapter;
 
 import java.util.regex.Pattern;
@@ -78,11 +56,12 @@ public class MediaAdapter extends BaseAdapter implements SectionIndexer, Library
 	 */
 	private Cursor mCursor;
 	/**
-	 * The type of media represented by this adapter. Must be one of the
-	 * MediaUtils.FIELD_* constants. Determines which content provider to query
-	 * for media and what fields to display.
+	 * view page index
 	 */
-	private final int mType;
+	private int mPageIndex;
+
+	private long mPlaylistId;
+
 	/**
 	 * The URI of the content provider backing this adapter.
 	 */
@@ -157,60 +136,23 @@ public class MediaAdapter extends BaseAdapter implements SectionIndexer, Library
 	 * @param limiter
 	 *            An initial limiter to use
 	 */
-	public MediaAdapter(LibraryActivity activity, int type, Limiter limiter) {
+	public MediaAdapter(LibraryActivity activity, int pageIndex, long playListId, Limiter limiter) {
 		mActivity = activity;
-		mType = type;
+		mPageIndex = pageIndex;
+		mPlaylistId = playListId;
 		mLimiter = limiter;
 		mIndexer = new MusicAlphabetIndexer(1);
 		mInflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
-		switch (type) {
-		case MediaUtils.TYPE_ARTIST:
-			mStore = MediaStore.Audio.Artists.EXTERNAL_CONTENT_URI;
-			mFields = new String[] { MediaStore.Audio.Artists.ARTIST };
-			mFieldKeys = new String[] { MediaStore.Audio.Artists.ARTIST_KEY };
-			mSongSort = MediaUtils.DEFAULT_SORT;
-			mSortEntries = new int[] { R.string.name, R.string.number_of_tracks };
-			mSortValues = new String[] { "artist_key %1$s", "number_of_tracks %1$s,artist_key %1$s" };
-			break;
-		case MediaUtils.TYPE_ALBUM:
-			mStore = MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI;
-			mFields = new String[] { MediaStore.Audio.Albums.ARTIST, MediaStore.Audio.Albums.ALBUM };
-			// Why is there no artist_key column constant in the album
-			// MediaStore? The column does seem to exist.
-			mFieldKeys = new String[] { "artist_key", MediaStore.Audio.Albums.ALBUM_KEY };
-			mSongSort = "album_key,track";
-			mSortEntries = new int[] { R.string.name, R.string.artist_album, R.string.year, R.string.number_of_tracks };
-			mSortValues = new String[] { "album_key %1$s", "artist_key %1$s,album_key %1$s", "minyear %1$s,album_key %1$s", "numsongs %1$s,album_key %1$s" };
-			break;
-		case MediaUtils.TYPE_SONG:
-			mStore = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-			mFields = new String[] { MediaStore.Audio.Media.ARTIST, MediaStore.Audio.Media.ALBUM, MediaStore.Audio.Media.TITLE };
-			mFieldKeys = new String[] { MediaStore.Audio.Media.ARTIST_KEY, MediaStore.Audio.Media.ALBUM_KEY, MediaStore.Audio.Media.TITLE_KEY };
-			mSortEntries = new int[] { R.string.name, R.string.artist_album_track, R.string.artist_album_title, R.string.artist_year, R.string.year };
-			mSortValues = new String[] { "title_key %1$s", "artist_key %1$s,album_key %1$s,track %1$s", "artist_key %1$s,album_key %1$s,title_key %1$s", "artist_key %1$s,year %1$s,track %1$s",
-					"year %1$s,title_key %1$s" };
-			mProjection = Song.FILLED_PROJECTION;
-			mExpandable = true;
-			break;
-		case MediaUtils.TYPE_PLAYLIST:
-			mStore = MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI;
-			mFields = new String[] { MediaStore.Audio.Playlists.NAME };
-			mFieldKeys = null;
-			mSortEntries = new int[] { R.string.name, R.string.date_added };
-			mSortValues = new String[] { "name %1$s", "date_added %1$s" };
-			mExpandable = true;
-			break;
-		case MediaUtils.TYPE_GENRE:
-			mStore = MediaStore.Audio.Genres.EXTERNAL_CONTENT_URI;
-			mFields = new String[] { MediaStore.Audio.Genres.NAME };
-			mFieldKeys = null;
-			mSortEntries = new int[] { R.string.name };
-			mSortValues = new String[] { "name %1$s" };
-			break;
-		default:
-			throw new IllegalArgumentException("Invalid value for type: " + type);
-		}
+
+		mStore = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+		mFields = new String[] { MediaStore.Audio.Media.ARTIST, MediaStore.Audio.Media.ALBUM, MediaStore.Audio.Media.TITLE };
+		mFieldKeys = new String[] { MediaStore.Audio.Media.ARTIST_KEY, MediaStore.Audio.Media.ALBUM_KEY, MediaStore.Audio.Media.TITLE_KEY };
+		mSortEntries = new int[] { R.string.name, R.string.artist_album_track, R.string.artist_album_title, R.string.artist_year, R.string.year };
+		mSortValues = new String[] { "title_key %1$s", "artist_key %1$s,album_key %1$s,track %1$s", "artist_key %1$s,album_key %1$s,title_key %1$s", "artist_key %1$s,year %1$s,track %1$s",
+				"year %1$s,title_key %1$s" };
+		mProjection = Song.FILLED_PROJECTION;
+		mExpandable = true;
 
 		if (mProjection == null) {
 			if (mFields.length == 1) {
@@ -249,78 +191,8 @@ public class MediaAdapter extends BaseAdapter implements SectionIndexer, Library
 	 *            Force the is_music check to be added to the selection.
 	 */
 	public QueryTask buildQuery(String[] projection, boolean forceMusicCheck) {
-		String constraint = mConstraint;
-		Limiter limiter = mLimiter;
-
-		StringBuilder selection = new StringBuilder();
-		String[] selectionArgs = null;
-
-		int mode = mSortMode;
-		String sortDir;
-		if (mode < 0) {
-			mode = ~mode;
-			sortDir = "DESC";
-		} else {
-			sortDir = "ASC";
-		}
-		String sort = String.format(mSortValues[mode], sortDir);
-
-		if (mType == MediaUtils.TYPE_SONG || forceMusicCheck)
-			selection.append("is_music AND length(_data)");
-
-		if (constraint != null && constraint.length() != 0) {
-			String[] needles;
-			String[] keySource;
-
-			// If we are using sorting keys, we need to change our constraint
-			// into a list of collation keys. Otherwise, just split the
-			// constraint with no modification.
-			if (mFieldKeys != null) {
-				String colKey = MediaStore.Audio.keyFor(constraint);
-				String spaceColKey = DatabaseUtils.getCollationKey(" ");
-				needles = colKey.split(spaceColKey);
-				keySource = mFieldKeys;
-			} else {
-				needles = SPACE_SPLIT.split(constraint);
-				keySource = mFields;
-			}
-
-			int size = needles.length;
-			selectionArgs = new String[size];
-
-			StringBuilder keys = new StringBuilder(20);
-			keys.append(keySource[0]);
-			for (int j = 1; j != keySource.length; ++j) {
-				keys.append("||");
-				keys.append(keySource[j]);
-			}
-
-			for (int j = 0; j != needles.length; ++j) {
-				selectionArgs[j] = '%' + needles[j] + '%';
-
-				// If we have something in the selection args (i.e. j > 0), we
-				// must have something in the selection, so we can skip the more
-				// costly direct check of the selection length.
-				if (j != 0 || selection.length() != 0)
-					selection.append(" AND ");
-				selection.append(keys);
-				selection.append(" LIKE ?");
-			}
-		}
-
-		if (limiter != null && limiter.type == MediaUtils.TYPE_GENRE) {
-			// Genre is not standard metadata for MediaStore.Audio.Media.
-			// We have to query it through a separate provider. : /
-			return MediaUtils.buildGenreQuery((Long) limiter.data, projection, selection.toString(), selectionArgs, sort);
-		} else {
-			if (limiter != null) {
-				if (selection.length() != 0)
-					selection.append(" AND ");
-				selection.append(limiter.data);
-			}
-
-			return new QueryTask(mStore, projection, selection.toString(), selectionArgs, sort);
-		}
+		QueryTask queryTask = MediaUtils.buildPlaylistQuery(mPlaylistId, projection, null);
+		return queryTask;
 	}
 
 	@Override
@@ -342,13 +214,7 @@ public class MediaAdapter extends BaseAdapter implements SectionIndexer, Library
 	 */
 	public QueryTask buildSongQuery(String[] projection) {
 		QueryTask query = buildQuery(projection, true);
-		query.type = mType;
-		if (mType != MediaUtils.TYPE_SONG) {
-			query.uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-			// Would be better to match the sort order in the adapter. This
-			// is likely to require significantly more work though.
-			query.sortOrder = mSongSort;
-		}
+		query.type = MediaUtils.TYPE_SONG;
 		return query;
 	}
 
@@ -359,7 +225,12 @@ public class MediaAdapter extends BaseAdapter implements SectionIndexer, Library
 
 	@Override
 	public int getMediaType() {
-		return mType;
+		return MediaUtils.TYPE_SONG;
+	}
+
+	@Override
+	public int getPageIndex() {
+		return mPageIndex;
 	}
 
 	@Override
@@ -374,36 +245,7 @@ public class MediaAdapter extends BaseAdapter implements SectionIndexer, Library
 
 	@Override
 	public Limiter buildLimiter(long id) {
-		String[] fields;
-		Object data;
-
-		Cursor cursor = mCursor;
-		if (cursor == null)
-			return null;
-		for (int i = 0, count = cursor.getCount(); i != count; ++i) {
-			cursor.moveToPosition(i);
-			if (cursor.getLong(0) == id)
-				break;
-		}
-
-		switch (mType) {
-		case MediaUtils.TYPE_ARTIST:
-			fields = new String[] { cursor.getString(1) };
-			data = String.format("%s=%d", MediaStore.Audio.Media.ARTIST_ID, id);
-			break;
-		case MediaUtils.TYPE_ALBUM:
-			fields = new String[] { cursor.getString(2), cursor.getString(1) };
-			data = String.format("%s=%d", MediaStore.Audio.Media.ALBUM_ID, id);
-			break;
-		case MediaUtils.TYPE_GENRE:
-			fields = new String[] { cursor.getString(1) };
-			data = id;
-			break;
-		default:
-			throw new IllegalStateException("getLimiter() is not supported for media type: " + mType);
-		}
-
-		return new Limiter(mType, fields, data);
+		return null;
 	}
 
 	/**
@@ -490,22 +332,6 @@ public class MediaAdapter extends BaseAdapter implements SectionIndexer, Library
 		Cursor cursor = mCursor;
 		cursor.moveToPosition(position);
 
-		// »ñÈ¡¸èÇú·âÃæ
-		// Song song = new Song(-1);
-		// song.populate(cursor);
-		// Bitmap cover = song.getCover(this.mActivity);
-		// holder.arrow.setImageBitmap(cover);
-		//
-		// holder.id = song.id;
-		// holder.title = song.path;
-		//
-		// SpannableStringBuilder sb = new SpannableStringBuilder(song.path);
-		// sb.append('\n');
-		// sb.append(song.title);
-		// sb.setSpan(new ForegroundColorSpan(Color.GRAY), song.path.length() +
-		// 1, sb.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-		// holder.text.setText(sb);
-
 		holder.id = cursor.getLong(0);
 		if (mFields.length > 1) {
 			String line1 = cursor.getString(1);
@@ -523,17 +349,15 @@ public class MediaAdapter extends BaseAdapter implements SectionIndexer, Library
 			holder.text.setText(sb);
 			holder.title = line1;
 
-			if (mType == MediaUtils.TYPE_SONG) {
-				Song song = new Song(-1);
-				song.populate(cursor);
-				Bitmap cover = song.getCover(this.mActivity);
-				holder.arrow.setImageBitmap(cover);
+			Song song = new Song(-1);
+			song.populate(cursor);
+			Bitmap cover = song.getCover(this.mActivity);
+			holder.arrow.setImageBitmap(cover);
 
-				if (cover == null) {
-					holder.arrow.setImageResource(R.drawable.fallback_cover);
-				} else {
-					holder.arrow.setImageBitmap(cover);
-				}
+			if (cover == null) {
+				holder.arrow.setImageResource(R.drawable.fallback_cover);
+			} else {
+				holder.arrow.setImageBitmap(cover);
 			}
 
 		} else {
@@ -589,10 +413,7 @@ public class MediaAdapter extends BaseAdapter implements SectionIndexer, Library
 	 * may very based on the active limiter.
 	 */
 	public int getDefaultSortMode() {
-		int type = mType;
-		if (type == MediaUtils.TYPE_ALBUM || type == MediaUtils.TYPE_SONG)
-			return 1; // aritst,album,track
-		return 0;
+		return 1;
 	}
 
 	/**
@@ -606,7 +427,7 @@ public class MediaAdapter extends BaseAdapter implements SectionIndexer, Library
 	public Intent createData(View view) {
 		ViewHolder holder = (ViewHolder) view.getTag();
 		Intent intent = new Intent();
-		intent.putExtra(LibraryAdapter.DATA_TYPE, mType);
+		intent.putExtra(LibraryAdapter.DATA_TYPE, MediaUtils.TYPE_SONG);
 		intent.putExtra(LibraryAdapter.DATA_ID, holder.id);
 		intent.putExtra(LibraryAdapter.DATA_TITLE, holder.title);
 		intent.putExtra(LibraryAdapter.DATA_EXPANDABLE, mExpandable);

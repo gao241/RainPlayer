@@ -1,25 +1,3 @@
-/*
- * Copyright (C) 2012 Christopher Eby <kreed@kreed.org>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
-
 package larry.baby.rain.activity;
 
 import java.io.File;
@@ -196,6 +174,11 @@ public class LibraryActivity extends PlaybackActivity implements TextWatcher, Di
 			checkForLaunch(getIntent());
 		}
 
+		// create playlists by searching user selected directory.
+		SharedPreferences settings = PlaybackService.getSettings(this);
+		String sdcardSearchDir = settings.getString(PrefKeys.SDCARD_SEARCH_DIRECTORY, null);
+		Playlist.searchFolderForPlaylists(getContentResolver(), sdcardSearchDir);
+
 		setContentView(R.layout.library_content);
 
 		mSearchBox = findViewById(R.id.search_box);
@@ -216,7 +199,6 @@ public class LibraryActivity extends PlaybackActivity implements TextWatcher, Di
 		pager.setAdapter(pagerAdapter);
 		mViewPager = pager;
 
-		SharedPreferences settings = PlaybackService.getSettings(this);
 		pager.setOnPageChangeListener(pagerAdapter);
 
 		View controls = getLayoutInflater().inflate(R.layout.actionbar_controls, null);
@@ -226,7 +208,7 @@ public class LibraryActivity extends PlaybackActivity implements TextWatcher, Di
 		controls.setOnClickListener(this);
 		mActionControls = controls;
 
-		loadTabOrder();
+//		loadTabOrder();
 		int page = settings.getInt(PrefKeys.LIBRARY_PAGE, 0);
 		if (page != 0) {
 			pager.setCurrentItem(page);
@@ -244,7 +226,7 @@ public class LibraryActivity extends PlaybackActivity implements TextWatcher, Di
 	@Override
 	public void onRestart() {
 		super.onRestart();
-		loadTabOrder();
+//		loadTabOrder();
 	}
 
 	@Override
@@ -259,19 +241,16 @@ public class LibraryActivity extends PlaybackActivity implements TextWatcher, Di
 		mDefaultAction = Integer.parseInt(settings.getString(PrefKeys.DEFAULT_ACTION_INT, "7"));
 		mLastActedId = LibraryAdapter.INVALID_ID;
 		updateHeaders();
-
-		String sdcardSearchDir = settings.getString(PrefKeys.SDCARD_SEARCH_DIRECTORY, null);
-		Playlist.searchFolderForPlaylists(getContentResolver(), sdcardSearchDir);
 	}
 
 	/**
 	 * Load the tab order and update the tab bars if needed.
 	 */
-	private void loadTabOrder() {
-		if (mPagerAdapter.loadTabOrder()) {
-			CompatHoneycomb.addActionBarTabs(this);
-		}
-	}
+//	private void loadTabOrder() {
+//		if (mPagerAdapter.loadTabOrder()) {
+//			CompatHoneycomb.addActionBarTabs(this);
+//		}
+//	}
 
 	/**
 	 * If this intent looks like a launch from icon/widget/etc, perform launch
@@ -476,8 +455,9 @@ public class LibraryActivity extends PlaybackActivity implements TextWatcher, Di
 	 */
 	public void onItemClicked(Intent rowData) {
 		int action = mDefaultAction;
-		if (action == ACTION_LAST_USED)
+		if (action == ACTION_LAST_USED){
 			action = mLastAction;
+		}
 
 		if (action == ACTION_EXPAND && rowData.getBooleanExtra(LibraryAdapter.DATA_EXPANDABLE, false)) {
 			onItemExpanded(rowData);
